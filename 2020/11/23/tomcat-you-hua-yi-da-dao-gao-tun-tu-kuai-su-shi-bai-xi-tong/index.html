@@ -196,7 +196,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      2.3k 字
+      2.6k 字
     </span>
   
 
@@ -206,7 +206,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      24
+      29
        分钟
     </span>
   
@@ -253,8 +253,21 @@
 <h1 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h1><p>由于这是个中间层服务，所以apache使用不多（apache压力不大）。所以与其优化两个系统（apache和tomcat），不如简单化这层次，直接关注tomcat优化。为了了解为什么tomcat的线程会繁忙，我们需要了解tomcat的线程模型。</p>
 <h1 id="高层次的描述Tomcat-Http-Connectotr的线程模型"><a href="#高层次的描述Tomcat-Http-Connectotr的线程模型" class="headerlink" title="高层次的描述Tomcat Http Connectotr的线程模型"></a>高层次的描述Tomcat Http Connectotr的线程模型</h1><p>Tomcat有一个acceptor线程来接收连接（这里就涉及到对网络的熟悉，熟悉就知道连接不仅仅是socket的表面，更是tcp的三次握手过程）。另外还有线程池来做实际的工作。于是一个请求的过程是：</p>
 <ol>
-<li><p>OS和客户端建立连接的TCP握手。这取决于OS的实现，可能是有一个队列来保存这些连接或多个队列来保存。在多队列的情况，一条队列保存未完成的连接，这些连接都是还没完成三次握手的。一旦完成握手，连接就会被移到保存完成连接的队列，应用就会消费这队列里的连接。“acceptCount”这tomcat参数就用于控制这些队列的长度。（应该是包括未完成握手和完成握手的连接数）</p>
+<li>OS和客户端建立连接的TCP握手。这取决于OS的实现，可能是有一个队列来保存这些连接或多个队列来保存。在多队列的情况，一条队列保存未完成的连接，这些连接都是还没完成三次握手的。一旦完成握手，连接就会被移到保存完成连接的队列，应用就会消费这队列里的连接。“acceptCount”这tomcat参数就用于控制这些队列的长度。（acceptCount是指完成握手的连接数，acceptCount会被映射成backlog）<pre><code class="hljs java"><span class="hljs-comment">//org.apache.catalina.connector.Connector</span>
+<span class="hljs-keyword">protected</span> <span class="hljs-keyword">static</span> HashMap&lt;String,String&gt; replacements =
+            <span class="hljs-keyword">new</span> HashMap&lt;String,String&gt;();
+    <span class="hljs-keyword">static</span> &#123;
+        replacements.put(<span class="hljs-string">&quot;acceptCount&quot;</span>, <span class="hljs-string">&quot;backlog&quot;</span>);
+        replacements.put(<span class="hljs-string">&quot;connectionLinger&quot;</span>, <span class="hljs-string">&quot;soLinger&quot;</span>);
+        replacements.put(<span class="hljs-string">&quot;connectionTimeout&quot;</span>, <span class="hljs-string">&quot;soTimeout&quot;</span>);
+        replacements.put(<span class="hljs-string">&quot;rootFile&quot;</span>, <span class="hljs-string">&quot;rootfile&quot;</span>);
+    &#125;</code></pre>
+backlog在linux2.2就变为指定完成握手的队列长度，而未完成的握手的半连接队列长度则通过操作系统/proc/sys/net/ipv4/tcp_max_syn_backlog来设置.<blockquote>
+<p>int listen(int sockfd, int backlog);<br>DESCRIPTION  listen() marks the socket referred to by sockfd as a passive socket, that is, as a socket that will be used to accept incoming connection requests using accept(2).<br>The backlog argument defines the maximum length to which the queue of pending connections for sockfd may grow. If a connection request arrives when the queue is full, the client may receive an error with an indication of  ECONNREFUSED or, if the underlying protocol supports retransmission, the request may be ignored so that a later reattempt at connection succeeds.<br>The behavior of the backlog argument on TCP sockets changed with Linux 2.2. Now it specifies the queue length for completely established sockets waiting to be accepted, instead of the number of incomplete connection        requests.  The maximum length of the queue for incomplete sockets can be set using /proc/sys/net/ipv4/tcp_max_syn_backlog. When syncookies are enabled there is no logical maximum length and this setting is ignored. See  tcp(7) for more information.</p>
+</blockquote>
 </li>
+</ol>
+<ol start="2">
 <li><p>tomcat的acceptor线程接收连接，这些队列都是来自于已完成握手的队列。</p>
 </li>
 <li><p>检查工作线程池是否有空闲的线程，如果没有且活动线程数小于maxThreads，则会创建工作线程，否则等待空闲线程。</p>
@@ -272,7 +285,7 @@
 <h1 id="其他考虑"><a href="#其他考虑" class="headerlink" title="其他考虑"></a>其他考虑</h1><p>如上所述，每个连接最终都被tomcat的一个工作线程处理。假如keep alive被打开，工作线程就会继续监听该连接，从而不会变成空闲而返回到线程池中。所以，如果客户端不够智能从而不会关闭连接，那么服务端很快就会用完它的线程。如果keep alive被打开，那么必须通过记住这种情况，来调节服务器群的大小。<br>或者，如果keep alive是关闭的，那么就不必担心使用工作线程处理非活动连接的问题。但是，在这种情况，每个调用就要付出打开和关闭连接的代价。此外，这还会创建很多TIME_WAIT状态的socket，这样会给服务器造成压力。</p>
 <p>最好根据应用程序的用力进行选择，并通过运行实验来测试性能。</p>
 <p>备注：<br>“连接”这两个字做于名词时，实际指的是socket。而当用于动词时，其实就是TCP三次握手。<br>线程池里的线程在本文，有时称为空闲线程或工作线程，或空闲工作线程。</p>
-<p>翻译自：<a target="_blank" rel="noopener" href="https://netflixtechblog.com/tuning-tomcat-for-a-high-throughput-fail-fast-system-e4d7b2fc163f">https://netflixtechblog.com/tuning-tomcat-for-a-high-throughput-fail-fast-system-e4d7b2fc163f</a></p>
+<p>参考：<br><a target="_blank" rel="noopener" href="https://netflixtechblog.com/tuning-tomcat-for-a-high-throughput-fail-fast-system-e4d7b2fc163f">https://netflixtechblog.com/tuning-tomcat-for-a-high-throughput-fail-fast-system-e4d7b2fc163f</a><br><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/92924737">https://zhuanlan.zhihu.com/p/92924737</a></p>
 
             </div>
             <hr>
