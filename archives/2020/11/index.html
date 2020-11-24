@@ -19,7 +19,7 @@
   <meta name="description" content="">
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
-  <title>Jevoncode</title>
+  <title>归档 - Jevoncode</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 
@@ -45,7 +45,7 @@
 
 
 <body>
-  <header style="height: 100vh;">
+  <header style="height: 60vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -151,7 +151,7 @@
 </nav>
 
     <div class="banner intro-2" id="background" parallax=true
-         style="background: url('https://rmt.dogedoge.com/fetch/fluid/storage/bg/vdysjx.png?w=1920&fmt=webp') no-repeat center center;
+         style="background: url('https://rmt.dogedoge.com/fetch/fluid/storage/bg/1cm6iu.png?w=1920&fmt=webp') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
@@ -164,10 +164,6 @@
           </div>
 
           
-            <div class="scroll-down-bar">
-              <i class="iconfont icon-arrowdown"></i>
-            </div>
-          
         </div>
       </div>
     </div>
@@ -177,85 +173,27 @@
     
       <div class="container nopadding-md">
         <div class="py-5" id="board"
-          style=margin-top:0>
+          >
           
           <div class="container">
             <div class="row">
               <div class="col-12 col-md-10 m-auto">
                 
 
-
-  <div class="row mx-auto index-card">
+<div class="list-group">
+  <p class="h4">共计 2 篇文章</p>
+  <hr>
+  
     
+      
+      <p class="h5">2020</p>
     
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2020/11/23/tomcat-you-hua-yi-da-dao-gao-tun-tu-kuai-su-shi-bai-xi-tong/">Tomcat优化以达到高吞吐快速失败系统</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2020/11/23/tomcat-you-hua-yi-da-dao-gao-tun-tu-kuai-su-shi-bai-xi-tong/">
-          
-          
-            
-          
-          问题奈飞有许多高吞吐低延迟的中间层服务（mid tier services，估计翻译中间件）。在这些服务中，他们发现有些服务，在在很短的时间剧增的流量，会导致这些机子变成CPU饥饿(cpu-starved)，并且服务会没响应。会导致这些服务的客户端体验很差，如读超时和连接超时。特别如果将读超时设置得非常高，会导致特别差的体验，客户端会等到好久好久。在SOA架构中，客户端的客户端也会请求超时，从而导
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2020-11-23 12:55" pubdate>
-              2020-11-23
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2020/10/28/java-li-de-sou/">Java里的锁</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2020/10/28/java-li-de-sou/">
-          
-          
-            
-          
-          源码：jdk8
-线程要不要锁住资源的角度，分为：悲观锁和乐观锁悲观锁概念：对于同一个数据的并发操作，悲观锁认为自己在使用该数据的时候别的线程来修改该数据的概率比较高，因此在获取数据的时候会先加锁，确保数据不会被别的线程修改。实现：Java中的，synchronized关键字和Lock的实现类都是悲观锁。
-乐观锁概念：对于同一个数据的并发操作，乐观锁认为自己在使用该数据的时候别的线程来修改该数据的概
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2020-10-28 09:39" pubdate>
-              2020-10-28
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-
+    <a href="/2020/11/23/tomcat-you-hua-yi-da-dao-gao-tun-tu-kuai-su-shi-bai-xi-tong/" class="list-group-item list-group-item-action">
+      <span class="archive-post-title">Tomcat优化以达到高吞吐快速失败系统</span>
+      <time style="float: right;">11-23</time>
+    </a>
+  
+</div>
 
 
 
@@ -481,7 +419,7 @@
       if ('false' === 'true') {
         var viewCtn = document.querySelector('#leancloud-post-views-container');
         if (viewCtn || enableIncr) {
-          var target = decodeURI('/index.html');
+          var target = decodeURI('/archives/2020/11/index.html');
           var viewGetter = getRecord(Counter, target).then((record) => {
             incrArr.push(buildIncrement(record.objectId))
             if (viewCtn) {
@@ -550,7 +488,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "Intelligence is the ability to adapt to change. ——Stephen Hawking&nbsp;",
+        "归档&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,

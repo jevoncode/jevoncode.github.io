@@ -1,0 +1,756 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  <title>Tomcat优化以达到高吞吐快速失败系统 - Jevoncode</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+    
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.2.0"></head>
+
+
+<body>
+  <header style="height: 60vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Jevoncode</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('https://rmt.dogedoge.com/fetch/fluid/storage/bg/dojm2h.png?w=1920&q=100&fmt=webp') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-author" aria-hidden="true"></i>
+      John Doe
+    </span>
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2020-11-23 12:55" pubdate>
+        2020年11月23日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.3k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      24
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- LeanCloud 统计文章PV -->
+      <span id="leancloud-post-views-container" class="post-meta" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="leancloud-post-views"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">Tomcat优化以达到高吞吐快速失败系统</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><p>奈飞有许多高吞吐低延迟的中间层服务（mid tier services，估计翻译中间件）。在这些服务中，他们发现有些服务，在在很短的时间剧增的流量，会导致这些机子变成CPU饥饿(cpu-starved)，并且服务会没响应。会导致这些服务的客户端体验很差，如读超时和连接超时。特别如果将读超时设置得非常高，会导致特别差的体验，客户端会等到好久好久。在SOA架构中，客户端的客户端也会请求超时，从而导致雪崩效应（ripple effect），以至于整个应用的其他服务也一起都变慢或不可用，最后全部服务变慢或不可用。在正常情况，机子都是有大量的CPU资源，服务也不是CPU密集型（cpu intensive）。所以，为什么会导致上述那些异常情况发发生？为了搞懂这些，熟悉我们要从最高层看看这些服务层次，请求流程如下：</p>
+<pre><code class="hljs brainfuck">--&gt; <span class="hljs-comment">Apache</span> --&gt; <span class="hljs-comment">Tomcat</span></code></pre>
+<p>在测试环境模拟流量激增时，发现CPU不足（cpu starvation）的原因是Apache和tomcat配置不当。当突然增加流量，Apache的worker就会变得繁忙和非常大量tomcat线程也在繁忙。系统CPU有个巨大的跳跃，是当大部分CPU时间都在处理上下文切换，就没有线程可以做任何有意义的工作时。</p>
+<h1 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h1><p>由于这是个中间层服务，所以apache使用不多（apache压力不大）。所以与其优化两个系统（apache和tomcat），不如简单化这层次，直接关注tomcat优化。为了了解为什么tomcat的线程会繁忙，我们需要了解tomcat的线程模型。</p>
+<h1 id="高层次的描述Tomcat-Http-Connectotr的线程模型"><a href="#高层次的描述Tomcat-Http-Connectotr的线程模型" class="headerlink" title="高层次的描述Tomcat Http Connectotr的线程模型"></a>高层次的描述Tomcat Http Connectotr的线程模型</h1><p>Tomcat有一个acceptor线程来接收连接（这里就涉及到对网络的熟悉，熟悉就知道连接不仅仅是socket的表面，更是tcp的三次握手过程）。另外还有线程池来做实际的工作。于是一个请求的过程是：</p>
+<ol>
+<li><p>OS和客户端建立连接的TCP握手。这取决于OS的实现，可能是有一个队列来保存这些连接或多个队列来保存。在多队列的情况，一条队列保存未完成的连接，这些连接都是还没完成三次握手的。一旦完成握手，连接就会被移到保存完成连接的队列，应用就会消费这队列里的连接。“acceptCount”这tomcat参数就用于控制这些队列的长度。（应该是包括未完成握手和完成握手的连接数）</p>
+</li>
+<li><p>tomcat的acceptor线程接收连接，这些队列都是来自于已完成握手的队列。</p>
+</li>
+<li><p>检查工作线程池是否有空闲的线程，如果没有且活动线程数小于maxThreads，则会创建工作线程，否则等待空闲线程。</p>
+</li>
+<li><p>一旦有空闲工作线程，acceptor线程就会将连接交给工作线程后，然后继续监听新的连接。</p>
+</li>
+<li><p>工作线程做的就是实际的工作，如从连接读取输入，处理请求，然后发送响应给客户端。如果连接不是keep alive则会关闭连接，然后将自己放回线程池。如果是keep aliave连接，继续等待该连接读取输入。如果数据一直没到，那么keep alive情况，会有个keepAliveTimeout，超过该时间，则会关闭连接，然后将自己放回线程池。</p>
+</li>
+</ol>
+<p>考虑这种情况，tomcat的maxThreads和acceptCount设置都很大，突增的流量会填满OS的队列和让tomcat的所有线程都变得繁忙。当更多的请求发送到这台机子，从而超过系统所能处理的数量时，这种请求的“排队”是不可避免的，并会导致繁忙线程的增加，最终导致CPU不足（cpu starvation）。因此，解决方法的关键是避免多个点（OS和tomcat线程）上有太多排队的请求，并在应用程序达到最大容量时快速失败（返回http状态503）。以下是实际操作的一个推荐：</p>
+<h1 id="当达到系统容量，应快速失败"><a href="#当达到系统容量，应快速失败" class="headerlink" title="当达到系统容量，应快速失败"></a>当达到系统容量，应快速失败</h1><p>预估在峰值负载时繁忙的线程数。如果服务器平均5ms内对请求作出响应，那么单个线程每秒则可处理200个请求(rps)。如果机子是4核CPU，则可以达到800rps。假设4个请求并行发送到机子（假设机子有4核），这会让4个线程繁忙5ms，所以下个5ms，4个或更多的请求让4个线程繁忙。随后的请求会选取一个空闲线程。所以理论上，在800rps时，平均不应该有超过8个线程处理繁忙状态。但实际当中，会有些不同，是因为系统所有资源都是共享的。因此，应该对系统能够维持的总吞吐量进行实验，并计算繁忙线程的期望数量。这将为维持峰值负载所需的线程数量提供一个基线。为了提供一些缓冲区，需要将线程数增加三倍以上，达到30个。这个缓冲区是任意的，如果需要还可以进一步调优。在我们的实验中，我们使用了略多于3倍的缓冲区，效果很好。<br>跟踪内存中运行中并发请求的数量，并将其用于快速失败。例如，当并发请求的数量接近刚刚预估的繁忙线程数据（8个），则返回一个http状态码503。这将防止太多的工作线程变得繁忙，因为一旦达到峰值吞吐了，任何变得活跃的额外线程都将执行非常轻量级的工作，即返回503。</p>
+<h1 id="设置操作系统参数"><a href="#设置操作系统参数" class="headerlink" title="设置操作系统参数"></a>设置操作系统参数</h1><p>acceptCount参数用于tomcat表示最长队列，这队列是操作系统级别，用于处理还未完成tcp握手的操作（具体取决于OS）。这是一个很重要的调优参数，否则在建立连接时会出现连接不上，活着导致OS队列中的连接过度排队，从而导致读超时。当然每个OS处理正在握手和完成握手的连接细节是不同，可能会时只有一个连接队列，或多个连接队列用于区分存放未完成握手和完成握手的连接（请阅读相关的文档来获取这些细节）。所以，有一个很好的方法调优这个acceptCount参数，那就是从很小的值开始测试，逐步增大，增达到没有连接错误即可。<br>太大的acceptCount值意味OS层面可以接收更多的请求，但是，如果rps大于该机子能够处理的能力，所有工作线程会变得繁忙，于是aceeptor线程会等待，直至有worker线程空闲。更多的请求将继续堆积在OS队列中，因为只有当工作线程可用时，acceptor线程才可以使用它们。在最糟糕的情况，这些请求还在OS队列时就已经超时了，但是tomcat的acceptor线程依然会去获取它来交给工作线程处理。这种是完全浪费资源，而客户端也没收到任何响应。<br>如果acceptCount设置太小，则会在很高的rps时无法有足够的OS空间来接收连接，这样客户端就会手连接超时的错误（connect time out error），实际吞吐会低于服务器能够承载的。</p>
+<p>因此可以实验从很小的值如10开始，然后逐步增加acceptCount的值，直至没有连接错误出现。</p>
+<p>当完成上面两个改变后，就算最差的情况，所有工作线程都很繁忙，但机子不会cpu不足，依然有能力做更多的工作（最大吞吐）。</p>
+<h1 id="其他考虑"><a href="#其他考虑" class="headerlink" title="其他考虑"></a>其他考虑</h1><p>如上所述，每个连接最终都被tomcat的一个工作线程处理。假如keep alive被打开，工作线程就会继续监听该连接，从而不会变成空闲而返回到线程池中。所以，如果客户端不够智能从而不会关闭连接，那么服务端很快就会用完它的线程。如果keep alive被打开，那么必须通过记住这种情况，来调节服务器群的大小。<br>或者，如果keep alive是关闭的，那么就不必担心使用工作线程处理非活动连接的问题。但是，在这种情况，每个调用就要付出打开和关闭连接的代价。此外，这还会创建很多TIME_WAIT状态的socket，这样会给服务器造成压力。</p>
+<p>最好根据应用程序的用力进行选择，并通过运行实验来测试性能。</p>
+<p>备注：<br>“连接”这两个字做于名词时，实际指的是socket。而当用于动词时，其实就是TCP三次握手。<br>线程池里的线程在本文，有时称为空闲线程或工作线程，或空闲工作线程。</p>
+<p>翻译自：<a target="_blank" rel="noopener" href="https://netflixtechblog.com/tuning-tomcat-for-a-high-throughput-fail-fast-system-e4d7b2fc163f">https://netflixtechblog.com/tuning-tomcat-for-a-high-throughput-fail-fast-system-e4d7b2fc163f</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/10/28/java-li-de-sou/">
+                        <span class="hidden-mobile">Java里的锁</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <div id="vcomments"></div>
+  <script type="text/javascript">
+    function loadValine() {
+      addScript('https://cdn.staticfile.org/valine/1.4.14/Valine.min.js', function () {
+        new Valine({
+          el: "#vcomments",
+          app_id: "kr3p3GWl5Y5ImtJuP3IYtO3P-gzGzoHsz",
+          app_key: "gpFLeL08kLroUKAbi9So5I6t",
+          placeholder: "留言仅限讨论，禁止广告等行为",
+          path: window.location.pathname,
+          avatar: "robohash",
+          meta: ["nick","mail"],
+          pageSize: "10",
+          lang: "zh-CN",
+          highlight: true,
+          recordIP: true,
+          serverURLs: "https://kr3p3gwl.lc-cn-n1-shared.com",
+        });
+      });
+    }
+    waitElementVisible('vcomments', loadValine);
+  </script>
+  <noscript>Please enable JavaScript to view the <a target="_blank" href="https://valine.js.org" rel="nofollow noopener noopener">comments
+      powered by Valine.</a></noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- LeanCloud 统计PV -->
+        <span id="leancloud-site-pv-container" style="display: none">
+            总访问量 
+            <span id="leancloud-site-pv"></span>
+             次
+          </span>
+      
+      
+        <!-- LeanCloud 统计UV -->
+        <span id="leancloud-site-uv-container" style="display: none">
+            总访客数 
+            <span id="leancloud-site-uv"></span>
+             人
+          </span>
+      
+
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+  <script defer>
+  (function () {
+    // 查询存储的记录
+    function getRecord(Counter, target) {
+      return new Promise(function (resolve, reject) {
+        Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({target})))
+          .then(resp => resp.json())
+          .then(({results, code, error}) => {
+            if (code === 401) {
+              throw error;
+            }
+            if (results && results.length > 0) {
+              var record = results[0];
+              resolve(record);
+            } else {
+              Counter('post', '/classes/Counter', {target, time: 0})
+                .then(resp => resp.json())
+                .then((record, error) => {
+                  if (error) {
+                    throw error;
+                  }
+                  resolve(record);
+                }).catch(error => {
+                console.error('Failed to create', error);
+                reject(error);
+              });
+            }
+          }).catch((error) => {
+          console.error('LeanCloud Counter Error:', error);
+          reject(error);
+        });
+      })
+    }
+
+    // 发起自增请求
+    function increment(Counter, incrArr) {
+      return new Promise(function (resolve, reject) {
+        Counter('post', '/batch', {
+          "requests": incrArr
+        }).then((res) => {
+          res = res.json();
+          if (res.error) {
+            throw res.error;
+          }
+          resolve(res);
+        }).catch((error) => {
+          console.error('Failed to save visitor count', error);
+          reject(error);
+        });
+      });
+    }
+
+    // 构建自增请求体
+    function buildIncrement(objectId) {
+      return {
+        "method": "PUT",
+        "path": `/1.1/classes/Counter/${ objectId }`,
+        "body": {
+          "time": {
+            '__op': 'Increment',
+            'amount': 1
+          }
+        }
+      }
+    }
+
+    // 校验是否为有效的 UV
+    function validUV() {
+      var key = 'LeanCloud_UV_Flag';
+      var flag = localStorage.getItem(key);
+      if (flag) {
+        // 距离标记小于 24 小时则不计为 UV
+        if (new Date().getTime() - parseInt(flag) <= 86400000) {
+          return false;
+        }
+      }
+      localStorage.setItem(key, new Date().getTime().toString());
+      return true;
+    }
+
+    function addCount(Counter) {
+      var enableIncr = 'true' === 'true' && window.location.hostname !== 'localhost';
+      var getterArr = [];
+      var incrArr = [];
+
+      // 请求 PV 并自增
+      var pvCtn = document.querySelector('#leancloud-site-pv-container');
+      if (pvCtn || enableIncr) {
+        var pvGetter = getRecord(Counter, 'site-pv').then((record) => {
+          incrArr.push(buildIncrement(record.objectId))
+          var ele = document.querySelector('#leancloud-site-pv');
+          if (ele) {
+            ele.innerText = record.time + 1;
+            if (pvCtn) {
+              pvCtn.style.display = 'inline';
+            }
+          }
+        });
+        getterArr.push(pvGetter);
+      }
+
+      // 请求 UV 并自增
+      var uvCtn = document.querySelector('#leancloud-site-uv-container');
+      if (uvCtn || enableIncr) {
+        var uvGetter = getRecord(Counter, 'site-uv').then((record) => {
+          var vuv = validUV();
+          vuv && incrArr.push(buildIncrement(record.objectId))
+          var ele = document.querySelector('#leancloud-site-uv');
+          if (ele) {
+            ele.innerText = record.time + (vuv ? 1 : 0);
+            if (uvCtn) {
+              uvCtn.style.display = 'inline';
+            }
+          }
+        });
+        getterArr.push(uvGetter);
+      }
+
+      // 如果是文章，请求文章的浏览数，并自增
+      if ('true' === 'true') {
+        var viewCtn = document.querySelector('#leancloud-post-views-container');
+        if (viewCtn || enableIncr) {
+          var target = decodeURI('/2020/11/23/tomcat-you-hua-yi-da-dao-gao-tun-tu-kuai-su-shi-bai-xi-tong/');
+          var viewGetter = getRecord(Counter, target).then((record) => {
+            incrArr.push(buildIncrement(record.objectId))
+            if (viewCtn) {
+              var ele = document.querySelector('#leancloud-post-views');
+              if (ele) {
+                ele.innerText = (record.time || 0) + 1;
+                viewCtn.style.display = 'inline';
+              }
+            }
+          });
+          getterArr.push(viewGetter);
+        }
+      }
+
+      // 如果启动计数自增，批量发起自增请求
+      if (enableIncr) {
+        Promise.all(getterArr).then(() => {
+          incrArr.length > 0 && increment(Counter, incrArr);
+        })
+      }
+    }
+
+    var app_id = 'kr3p3GWl5Y5ImtJuP3IYtO3P-gzGzoHsz'
+    var app_key = 'gpFLeL08kLroUKAbi9So5I6t'
+    var server_url = 'https://kr3p3gwl.lc-cn-n1-shared.com'
+
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${ api_server }/1.1${ url }`, {
+          method,
+          headers: {
+            'X-LC-Id': app_id,
+            'X-LC-Key': app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+
+      addCount(Counter);
+    }
+
+    var api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${ app_id.slice(0, 8).toLowerCase() }.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(resp => resp.json())
+        .then(({api_server}) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 3,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Tomcat优化以达到高吞吐快速失败系统&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+</body>
+</html>
