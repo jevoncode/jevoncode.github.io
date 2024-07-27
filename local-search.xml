@@ -4,6 +4,19 @@
   
   
   <entry>
+    <title>LLM as a Service</title>
+    <link href="/2024/07/27/llm-as-a-service/"/>
+    <url>/2024/07/27/llm-as-a-service/</url>
+    
+    <content type="html"><![CDATA[<p><img src="/img/202407/202407271640.jpg"></p><h1 id="LLM-as-a-Service"><a href="#LLM-as-a-Service" class="headerlink" title="LLM as a Service"></a>LLM as a Service</h1><p>I initially published my project that utilizes LLM as a service. It’s a dictionary that enables me to ponder what distinguishes this project from those developed in Java. Indeed, the former doesn’t require additional server development like Java projects do; it simply relies on LLM.</p><p>As such, I believe “LLM as a service” will be the next generation of software formats. Furthermore, the recent release of LLaMA 3.1 is significant, given that Mark Zuckerberg mentioned that the 405B model can be used for fine-tuning and distilling smaller models. Notably, a small model can now be considered a service. This means you can train your specific “mode” (service) using these large models.</p><h2 id="Why-“LLM-as-a-Service”-Is-Good-for-People"><a href="#Why-“LLM-as-a-Service”-Is-Good-for-People" class="headerlink" title="Why “LLM as a Service” Is Good for People?"></a>Why “LLM as a Service” Is Good for People?</h2><p>Like my project, <a href="https://github.com/jevoncode/book-buddy">Book-buddy</a>, users only need to download or install the app from an app market. They don’t require additional server installation. As a developer, I also benefit, as I don’t need to provide a service, which saves me time and money spent running a service on a cloud platform.</p><h2 id="How-Can-We-Achieve-This"><a href="#How-Can-We-Achieve-This" class="headerlink" title="How Can We Achieve This?"></a>How Can We Achieve This?</h2><p>ChatGPT has made AI popular recently, so I’m also venturing into this new territory. However, I have some thoughts to share. Firstly, “LLM as a service” requires a suitable <strong>model</strong> and <strong>prompt</strong>. Models typically come from large companies due to the high costs of training them. Prompt engineers are akin to Java developers in the past. Secondly, to achieve user-friendliness, I believe we need to provide a good <strong>UI</strong>. This way, UI developers can still thrive while working on specific aspects.</p><p>That’s all for now. I will continue to pursue the vision of LLM as a service.</p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Ollama environment variable setting on Linux</title>
     <link href="/2024/07/23/Ollama-environment-variable-setting-on-Linux/"/>
     <url>/2024/07/23/Ollama-environment-variable-setting-on-Linux/</url>
